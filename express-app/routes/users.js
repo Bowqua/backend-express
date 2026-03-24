@@ -3,6 +3,12 @@ const router = express.Router();
 
 /* GET users listing. */
 
+const sqlite3 = require('sqlite3').verbose()
+const db = new sqlite3.Database('mydb.db');
+db.run(`CREATE TABLE IF NOT EXISTS users (
+   id INTEGER PRIMARY KEY AUTOINCREMENT,
+   name text)`);
+
 const users = [
     { id: 1, name: 'Jonathan' },
     { id: 2, name: 'Sarah' },
@@ -16,10 +22,6 @@ router.get('/', function (req, res) {
         } else {
             res.send(rows);
         }
-
-        res.json({
-            items: rows
-        });
     });
 });
 
@@ -30,36 +32,26 @@ router.post('/', (req, res) => {
     }
 
     const insert = "INSERT INTO users (name) VALUES (?)";
-    db.run(insert, [name]);
+    db.run(insert, [userData.name]);
 
-    const newUser = {
-        id: Date.now(),
-        name: userData.name
-    };
-
-    users.push(newUser);
-    res.status(201).json(newUser);
+    res.status(201).json(userData);
 });
 
 router.get('/:id', function(req, res, next) {
     const id = Number(req.params.id);
-    const user = users.find(function (user) {
-        return user.id === id;
+    db.get('SELECT id, name FROM users WHERE id = ?', [id], function (err, row) {
+        if (err) {
+            console.log(err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (!row) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json(row);
     });
-
-    if (!user) {
-        return res.status(404).json({
-            error: 'User not found'
-        });
-    }
-
-    res.json(user);
 });
 
-const sqlite3 = require('sqlite3').verbose()
-const db = new sqlite3.Database('mydb.db');
-db.run(`CREATE TABLE IF NOT EXISTS users (
-   id INTEGER PRIMARY KEY AUTOINCREMENT,
-   name text)`);
 
 module.exports = router;
