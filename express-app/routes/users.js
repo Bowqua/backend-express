@@ -9,10 +9,18 @@ const users = [
     { id: 3, name: 'John' }
 ];
 
-router.get('/', function(req, res, next) {
-  res.json({
-      items: users
-  });
+router.get('/', function (req, res) {
+    db.all("SELECT id, name FROM users", [], (err, rows) => {
+        if (err) {
+            console.log(err);
+        } else {
+            res.send(rows);
+        }
+
+        res.json({
+            items: rows
+        });
+    });
 });
 
 router.post('/', (req, res) => {
@@ -20,6 +28,9 @@ router.post('/', (req, res) => {
     if (!userData.name) {
         return res.status(400).json({ error: 'Имя пользователя обязательно'});
     }
+
+    const insert = "INSERT INTO users (name) VALUES (?)";
+    db.run(insert, [name]);
 
     const newUser = {
         id: Date.now(),
@@ -44,5 +55,11 @@ router.get('/:id', function(req, res, next) {
 
     res.json(user);
 });
+
+const sqlite3 = require('sqlite3').verbose()
+const db = new sqlite3.Database('mydb.db');
+db.run(`CREATE TABLE IF NOT EXISTS users (
+   id INTEGER PRIMARY KEY AUTOINCREMENT,
+   name text)`);
 
 module.exports = router;
