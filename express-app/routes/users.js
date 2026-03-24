@@ -15,6 +15,21 @@ router.get('/', function(req, res, next) {
   });
 });
 
+router.post('/', (req, res) => {
+    const userData = req.body;
+    if (!userData.name) {
+        return res.status(400).json({ error: 'Имя пользователя обязательно'});
+    }
+
+    const newUser = {
+        id: Date.now(),
+        name: userData.name
+    };
+
+    users.push(newUser);
+    res.status(201).json(newUser);
+});
+
 router.get('/:id', function(req, res, next) {
     const id = Number(req.params.id);
     const user = users.find(function (user) {
