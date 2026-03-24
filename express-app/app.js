@@ -18,3 +18,14 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
 module.exports = app;
+
+app.use((req, res, next) => {
+    if(req.query.auth === 'true') {
+        next();
+    } else {
+        res.status(401).json({ error: 'Аутентификация не пройдена'});
+    }
+});
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
